@@ -232,10 +232,6 @@
       "command": "git_commit_selected_hunk"
   }
   ,{
-      "caption": "Git: Commit history",
-      "command": "git_commit_history"
-  }
-  ,{
       "caption": "Git: Update Project Ignored Files",
       "command": "git_update_ignore"
   }
@@ -266,8 +262,7 @@
   ,{
       "caption": "Git: Open Url",
       "command": "git_open_config_url", "args": { "url_param": "remote.origin.url" }
-  }
-
+  },
   {
     "caption": "Git Blame: Show",
     "command": "blame"

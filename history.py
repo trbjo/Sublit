@@ -126,14 +126,6 @@ class GitGraph(object):
         self.scratch(result, title="Git Log Graph", syntax=plugin_file("syntax/Git Graph.tmLanguage"))
 
 
-class GitGraphCommand(GitGraph, GitTextCommand):
-    pass
-
-
-class GitGraphAllCommand(GitGraph, GitWindowCommand):
-    pass
-
-
 class GitOpenFileCommand(GitLog, GitWindowCommand):
     def run(self):
         self.run_command(['git', 'branch', '-a', '--no-color'], self.branch_done)
@@ -178,27 +170,6 @@ class GitOpenFileCommand(GitLog, GitWindowCommand):
 
     def show_done(self, result):
         self.scratch(result, title="%s:%s" % (self.fileRef, self.filename))
-
-
-class GitDocumentCommand(GitBlameCommand):
-    def blame_done(self, result, focused_line=1):
-        shas = set((sha for sha in re.findall(r'^[0-9a-f]+', result, re.MULTILINE) if not re.match(r'^0+$', sha)))
-        command = ['git', 'show', '-s', '-z', '--no-color', '--date=iso']
-        command.extend(shas)
-
-        self.run_command(command, self.show_done)
-
-    def show_done(self, result):
-        commits = []
-        for commit in result.split('\0'):
-            match = re.search(r'^Date:\s+(.+)$', commit, re.MULTILINE)
-            if match:
-                commits.append((match.group(1), commit))
-        commits.sort(reverse=True)
-        commits = [commit for d, commit in commits]
-
-        self.scratch('\n\n'.join(commits), title="Git Commit Documentation",
-                     syntax=plugin_file("syntax/Git Commit View.tmLanguage"))
 
 
 class GitGotoCommit(GitTextCommand):

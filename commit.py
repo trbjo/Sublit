@@ -9,8 +9,6 @@ import sublime_plugin
 from . import GitTextCommand, GitWindowCommand, plugin_file, view_contents, _make_text_safeish
 from .add import GitAddSelectedHunkCommand
 
-history = []
-
 
 class PromptGitCommand(GitWindowCommand):
     last_selected = 0
@@ -181,19 +179,6 @@ class GitCommitMessageListener(sublime_plugin.EventListener):
             return
         message = view_contents(view)
         command.message_done(message)
-
-
-class GitCommitHistoryCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        self.edit = edit
-        if history:
-            self.view.window().show_quick_panel(history, self.panel_done, sublime.MONOSPACE_FONT)
-        else:
-            sublime.message_dialog("You have no commit history.\n\nCommit history is just a quick list of messages you've used in this session.")
-
-    def panel_done(self, index):
-        if index > -1:
-            self.view.replace(self.edit, self.view.sel()[0], history[index] + '\n')
 
 
 class GitCommitSelectedHunk(GitAddSelectedHunkCommand):
