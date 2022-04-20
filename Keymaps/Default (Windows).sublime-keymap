@@ -1,0 +1,6 @@
+[
+  {"keys": ["ctrl+alt+b"],       "command": "blame"},
+  {"keys": ["ctrl+alt+shift+b"], "command": "blame_show_all"},
+  // {"keys": ["f5"],               "command": "blame_toggle_inline"},
+  // {"keys": ["f8"],               "command": "blame_instadiff"},
+]

@@ -1,0 +1,309 @@
+[
+  {
+    "caption": "Git: Add This File",
+    "command": "git_add_untracked_file",
+  },
+  {
+    "caption": "Git Commit",
+    "command": "git_commit",
+  },
+
+  {   "caption": "Git: Init",
+      "command": "git_init"
+  }
+  ,{
+      "caption": "Git: Document Selection",
+      "command": "git_document"
+  }
+  ,{
+      "caption": "Git: New Tag",
+      "command": "git_new_tag"
+  }
+  ,{
+      "caption": "Git: Delete Tag",
+      "command": "git_delete_tag"
+  }
+  ,{
+      "caption": "Git: Show Tags",
+      "command": "git_show_tags"
+  }
+  ,{
+      "caption": "Git: Push Tags",
+      "command": "git_raw", "args": { "command": "git push --tags", "may_change_files": false }
+  }
+  ,{
+      "caption": "Git: Checkout Tag",
+      "command": "git_checkout_tag"
+  }
+  ,{
+      "caption": "Git: Log Current File",
+      "command": "git_log"
+  }
+  ,{
+      "caption": "Git: Log All",
+      "command": "git_log_all"
+  }
+  ,{
+      "caption": "Git: Graph Current File",
+      "command": "git_graph"
+  }
+  ,{
+      "caption": "Git: Graph All",
+      "command": "git_graph_all"
+  }
+  ,{
+      "caption": "Git: View selected commits",
+      "command": "git_goto_commit"
+  }
+  ,{
+      "caption": "Git: Amend Commit",
+      "command": "git_commit_amend"
+  }
+  ,{
+      "caption": "Git: Quick Commit (current file)",
+      "command": "git_quick_commit"
+  }
+  ,{
+      "caption": "Git: Quick Commit (repo)",
+      "command": "git_quick_commit", "args": { "target": "*" }
+  }
+  ,{
+      "caption": "Git: Quick Commit (repo, only already added files)",
+      "command": "git_quick_commit", "args": { "target": false }
+  }
+  ,{
+      "caption": "Git: Status",
+      "command": "git_status"
+  }
+  ,{
+      "caption": "Git: Open Modified Files",
+      "command": "git_open_modified_files"
+  }
+  ,{
+      "caption": "Git: New Branch",
+      "command": "git_new_branch"
+  }
+  ,{
+      "caption": "Git: Change Branch",
+      "command": "git_branch"
+  }
+  ,{
+      "caption": "Git: Checkout Remote Tracking Branch",
+      "command": "git_track_remote_branch"
+  }
+  ,{
+      "caption": "Git: Set Upstream Tracking Branch",
+      "command": "git_set_upstream_branch"
+  }
+  ,{
+      "caption": "Git: Merge Branch",
+      "command": "git_merge"
+  }
+  ,{
+      "caption": "Git: Delete Branch",
+      "command": "git_delete_branch"
+  }
+  ,{
+      "caption": "Git: Delete Branch (Force)",
+      "command": "git_force_delete_branch"
+  }
+  ,{
+      "caption": "Git: Stash Changes",
+      "command": "git_raw", "args": { "command": "git stash" }
+  }
+  ,{
+      "caption": "Git: Stash Pop",
+      "command": "git_raw", "args": { "command": "git stash pop" }
+  }
+  ,{
+      "caption": "Git: Stash Apply",
+      "command": "git_stash_apply"
+  }
+  ,{
+      "caption": "Git: Stash Drop",
+      "command": "git_stash_drop"
+  }
+  ,{
+      "caption": "Git: Stash List",
+      "command": "git_stash_list"
+  }
+  ,{
+      "caption": "Git: Add Current File",
+      "command": "git_raw", "args": { "command": "git add", "append_current_file": true }
+  }
+  ,{
+      "caption": "Git: Add...",
+      "command": "git_add_choice"
+  }
+  ,{
+      "caption": "Git: Add All",
+      "command": "git_raw", "args": { "command": "git add -A" }
+  }
+  ,{
+      "caption": "Git: Checkout Current File",
+      "command": "git_raw", "args": { "command": "git checkout", "append_current_file": true }
+  }
+  ,{
+      "caption": "Git: Fetch",
+      "command": "git_raw", "args": { "command": "git fetch", "may_change_files": false }
+  }
+  ,{
+      "caption": "Git: Pull",
+      "command": "git_raw", "args": { "command": "git pull" }
+  }
+  ,{
+      "caption": "Git: Pull Using Rebase",
+      "command": "git_raw", "args": { "command": "git pull --rebase" }
+  }
+  ,{
+      "caption": "Git: Pull Current Branch",
+      "command": "git_pull_current_branch"
+  }
+  ,{
+      "caption": "Git: Push",
+      "command": "git_raw", "args": { "command": "git push", "may_change_files": false }
+  }
+  ,{
+      "caption": "Git: Push Current Branch",
+      "command": "git_push_current_branch"
+  }
+  ,{
+      "caption": "Git: Show Previous Version of Current File",
+      "command": "git_show"
+  }
+  ,{
+      "caption": "Git: Show Commit By Hash",
+      "command": "git_show_commit"
+  }
+  ,{
+      "caption": "Git: Toggle Annotations",
+      "command": "git_toggle_annotations"
+  }
+  ,{
+      "caption": "Git: Custom Command",
+      "command": "git_custom"
+  }
+  ,{
+      "caption": "Git Flow: Feature Start",
+      "command": "git_flow_feature_start"
+  }
+  ,{
+      "caption": "Git Flow: Feature Finish",
+      "command": "git_flow_feature_finish"
+  }
+  ,{
+      "caption": "Git Flow: Release Start",
+      "command": "git_flow_release_start"
+  }
+  ,{
+      "caption": "Git Flow: Release Finish",
+      "command": "git_flow_release_finish"
+  }
+  ,{
+      "caption": "Git Flow: Hotfix Start",
+      "command": "git_flow_hotfix_start"
+  }
+  ,{
+      "caption": "Git Flow: Hotfix Finish",
+      "command": "git_flow_hotfix_finish"
+  }
+  ,{
+      "caption": "Git: Open...",
+      "command": "git_open_file"
+  }
+  ,{
+      "caption": "Git: Reset (unstage) Current File",
+      "command": "git_raw", "args": { "command": "git reset HEAD", "append_current_file": true, "show_in": "suppress" }
+  }
+  ,{
+      "caption": "Git: Reset (unstage) All",
+      "command": "git_raw", "args": { "command": "git reset HEAD", "show_in": "suppress" }
+  }
+  ,{
+      "caption": "Git: Reset (hard) HEAD",
+      "command": "git_reset_hard_head"
+  }
+  ,{
+      "caption": "Git: Add Selected Hunk",
+      "command": "git_add_selected_hunk"
+  }
+  ,{
+      "caption": "Git: Commit Selected Hunk",
+      "command": "git_commit_selected_hunk"
+  }
+  ,{
+      "caption": "Git: Commit history",
+      "command": "git_commit_history"
+  }
+  ,{
+      "caption": "Git: Update Project Ignored Files",
+      "command": "git_update_ignore"
+  }
+  ,{
+      "caption": "Git: Move Current File",
+      "command": "git_file_move"
+  }
+  ,{
+      "caption": "Git: Rename / Move Current File",
+      "command": "git_file_move", "args": { "rename": true }
+  }
+  ,{
+      "caption": "Git: Remove / Delete Current File",
+      "command": "git_raw", "args": { "command": "git rm", "append_current_file": true }
+  }
+  ,{
+      "caption": "Git: Assume Unchanged",
+      "command": "git_update_index_assume_unchanged"
+  }
+  ,{
+      "caption": "Git: No Assume Unchanged",
+      "command": "git_update_index_no_assume_unchanged"
+  }
+  ,{
+      "caption": "Git: Open Local Config",
+      "command": "git_open_config_file"
+  }
+  ,{
+      "caption": "Git: Open Url",
+      "command": "git_open_config_url", "args": { "url_param": "remote.origin.url" }
+  }
+
+  {
+    "caption": "Git Blame: Show",
+    "command": "blame"
+  },
+  {
+    "caption": "Git Blame: Show All",
+    "command": "blame_show_all"
+  },
+  {
+    "caption": "Git Blame: Erase All",
+    "command": "blame_erase_all"
+  },
+  {
+    "caption": "Git Blame: Toggle Inline Blame",
+    "command": "blame_toggle_inline"
+  },
+  {
+    "caption": "Git Blame: Instadiff",
+    "command": "blame_instadiff"
+  },
+  {
+    "caption": "Git Blame: Settings",
+    // TWIN: Entry in "Main.sublime-menu"
+    "command": "edit_settings",
+    "args": {
+      "base_file": "${packages}/Git blame/Settings/Git blame.sublime-settings",
+      "default": "{\n\t$0\n}\n"
+    }
+  },
+  {
+    "caption": "Git Blame: Key Bindings",
+    // TWIN: Entry in "Main.sublime-menu"
+    "command": "edit_settings",
+    "args": {
+      "base_file": "${packages}/Git blame/Keymaps/Default (${platform}).sublime-keymap",
+      "default": "[\n\t$0\n]\n"
+    }
+  }
+]
