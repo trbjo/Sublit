@@ -23,7 +23,6 @@ VIEW_SETTINGS_KEY_WRAP_PREV = "word_wrap_prev"  # Made up by us
 VIEW_SETTINGS_KEY_INDENT_GUIDE = "draw_indent_guides"  # Made up by us
 VIEW_SETTINGS_KEY_INDENT_GUIDE_PREV = "draw_indent_guides_prev"  # Made up by us
 
-dimmed=") blend(var(--background) 30%)"
 color_list = [ "redish", "orangish", "purplish", "yellowish", "greenish", "cyanish", "bluish", "pinkish" ]
 
 #         view_id:  { "sha": List[phantom]}
@@ -110,19 +109,20 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
 
     def phantom_creator(self, phantom_tuple: Tuple[int, str, str, str, str, str, bool], dim: Dim=Dim.UNSET) -> Phantom:
         if dim == Dim.UNSET:
-            sha_color = phantom_tuple[1] + dimmed if phantom_tuple[6] else phantom_tuple[1]
+            sha_dim =  '40' if phantom_tuple[6] else '100'
             text_dim = '25'
         elif dim == Dim.NO:
-            sha_color = phantom_tuple[1]
+            sha_dim =  '100'
             text_dim = '70'
         elif dim == Dim.YES:
             text_dim = '10'
-            sha_color = phantom_tuple[1] + dimmed
+            sha_dim =  '20'
 
         return sublime.Phantom(
             Region(self.view.text_point(phantom_tuple[0] - 1, 0)),
             blame_all_phantom_html_template.format(
-                sha_color = sha_color,
+                sha_color = phantom_tuple[1],
+                    sha_dim=sha_dim,
                 sha=phantom_tuple[2],
                 text_dim=text_dim,
                 visualsha=phantom_tuple[3],
