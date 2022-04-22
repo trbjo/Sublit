@@ -54,7 +54,7 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
     def on_hover(self, point: int, hover_zone: int) -> None:
         if not self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED):
             return
-        if hover_zone != sublime.HOVER_TEXT:
+        if hover_zone == sublime.HOVER_MARGIN:
             return
         file_name: Union[str,None] = self.view.file_name()
         if file_name is None:
