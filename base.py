@@ -40,11 +40,6 @@ class BaseBlame(metaclass=ABCMeta):
         cli_args = ["show", "--no-color", sha, "--pretty=format:%s", "--no-patch"]
         return self.run_git(path, cli_args)
 
-    def tester(self) -> int:
-        counter+=1
-        return self.counter
-
-
     @classmethod
     def parse_line(cls, line: str):
         pattern = r"""(?x)
