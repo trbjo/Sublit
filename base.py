@@ -22,7 +22,7 @@ class BaseBlame(metaclass=ABCMeta):
         ).decode()
 
     def get_commit_desc(self, sha: str, path: str) -> str:
-        cli_args = ["rev-list", "--format=%B", "--max-count=1", sha]
+        cli_args = ["rev-list", "--format=%B", "--max-count=1", sha.strip('^')]
         return self.run_git(path, cli_args)
 
     def get_blame_text(self, path: str, **kwargs: List[str]):
