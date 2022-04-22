@@ -1,5 +1,6 @@
 import os
 import re
+from typing import List
 
 import sublime
 from . import GitWindowCommand, git_root
@@ -11,8 +12,8 @@ class GitStatusCommand(GitWindowCommand):
     def run(self):
         self.run_command(['git', 'status', '--porcelain'], self.status_done)
 
-    def status_done(self, result):
-        self.results = list(filter(self.status_filter, result.rstrip().split('\n')))
+    def status_done(self, result: str):
+        self.results: List[str] = list(filter(self.status_filter, result.rstrip().split('\n')))
         if len(self.results):
             self.show_status_list()
         else:
@@ -30,10 +31,10 @@ class GitStatusCommand(GitWindowCommand):
             return False
         return len(item) > 0
 
-    def panel_done(self, picked):
+    def panel_done(self, picked: int):
         if 0 > picked < len(self.results):
             return
-        picked_file = self.results[picked]
+        picked_file: str = self.results[picked]
         if isinstance(picked_file, (list, tuple)):
             picked_file = picked_file[0]
         # first 2 characters are status codes, the third is a space

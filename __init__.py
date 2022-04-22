@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Union
 import sublime
 import sublime_plugin
 import threading
@@ -46,11 +47,11 @@ def open_url(url):
     sublime.active_window().run_command('open_url', {"url": url})
 
 
-def git_root(directory):
+def git_root(directory: str) -> Union[bool,str]:
     global git_root_cache
 
-    retval = False
-    leaf_dir = directory
+    retval: Union[bool,str] = False
+    leaf_dir: str = directory
 
     if leaf_dir in git_root_cache and git_root_cache[leaf_dir]['expires'] > time.time():
         return git_root_cache[leaf_dir]['retval']
@@ -201,7 +202,7 @@ class CommandThread(threading.Thread):
         output = ''
         callback = self.on_done
         try:
-            cwd = None
+            cwd: Union[None,str] = None
             if self.working_dir != "":
                 cwd = self.working_dir
             # Windows needs startupinfo in order to start process in background
@@ -267,7 +268,7 @@ class CommandThread(threading.Thread):
 class GitCommand(object):
     may_change_files = False
 
-    def run_command(self, command, callback=None, show_status=True, filter_empty_args=True, no_save=False, **kwargs):
+    def run_command(self, command, callback=None, show_status=True, filter_empty_args=True, no_save=False, **kwargs) -> None:
         if filter_empty_args:
             command = [arg for arg in command if arg]
         if 'working_dir' not in kwargs:
