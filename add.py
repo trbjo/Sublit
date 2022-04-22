@@ -184,7 +184,8 @@ class GitAddSelectedHunkCommand(GitTextCommand):
                     if sel_end - 1 < hunk_start:
                         continue
                     elif sel_start - 1 > hunk_end:
-                        continue
+                        if not (sel_start -2 == hunk_start and sel_end -2 == hunk_end):
+                            continue
 
                     prev_line_offset = 1
 
