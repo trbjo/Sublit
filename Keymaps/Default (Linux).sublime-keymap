@@ -1,6 +1,13 @@
 [
   {"keys": ["ctrl+shift+q"], "command": "blame"},
-  {"keys": ["ctrl+shift+c"], "command": "blame_show_all"},
+  {"keys": ["ctrl+shift+escape"], "command": "blame_show_all"},
+  {"keys": ["7"], "command": "revert_hunk", "context": [{"key": "setting.command_mode"}, ] },
+  {"keys": ["7"], "command": "revert_modification", "context": [{"key": "selection_empty", "operator": "equal", "operand": false, "match_all": true }, {"key": "setting.command_mode"}, ] },
+  {"keys": ["8"], "command": "next_modification", "context": [{"key": "setting.command_mode"}, ] },
+  {"keys": ["ctrl+8"], "command": "prev_modification", "context": [{"key": "setting.command_mode"}, ] },
+  {"keys": ["9"], "command": "toggle_inline_diff", "context": [{"key": "setting.command_mode"}, ] },
+  {"keys": ["0"], "command": "git_add_selected_hunk", "context": [{"key": "setting.command_mode"}, ] },
+
   //{"keys": ["f5"],           "command": "blame_toggle_inline"},
   //{"keys": ["f8"],           "command": "blame_instadiff"},
 ]
