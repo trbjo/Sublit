@@ -2,13 +2,12 @@
   {
     "caption": "Git: Add This File",
     "command": "git_add_untracked_file",
-  },
-  {
+  }
+  ,{
     "caption": "Git Commit",
     "command": "git_commit",
-  },
-
-  {   "caption": "Git: Init",
+  }
+  ,{   "caption": "Git: Init",
       "command": "git_init"
   }
   ,{
@@ -262,28 +261,28 @@
   ,{
       "caption": "Git: Open Url",
       "command": "git_open_config_url", "args": { "url_param": "remote.origin.url" }
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Show",
     "command": "blame"
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Show All",
     "command": "blame_show_all"
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Erase All",
     "command": "blame_erase_all"
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Toggle Inline Blame",
     "command": "blame_toggle_inline"
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Instadiff",
     "command": "blame_instadiff"
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Settings",
     // TWIN: Entry in "Main.sublime-menu"
     "command": "edit_settings",
@@ -291,8 +290,8 @@
       "base_file": "${packages}/Git blame/Settings/Git blame.sublime-settings",
       "default": "{\n\t$0\n}\n"
     }
-  },
-  {
+  }
+  ,{
     "caption": "Git Blame: Key Bindings",
     // TWIN: Entry in "Main.sublime-menu"
     "command": "edit_settings",
