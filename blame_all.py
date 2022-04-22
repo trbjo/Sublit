@@ -1,10 +1,16 @@
 import sublime
 import sublime_plugin
-from typing import List, Union
-from sublime import Edit, View, Region
+from typing import List, Tuple, Union, Dict
+from sublime import Edit, Phantom, View, Region
 
 from .base import BaseBlame
 from .templates import blame_all_phantom_html_template
+from enum import IntEnum
+
+class Dim(IntEnum):
+    UNSET = 0
+    YES = 1
+    NO = 2
 
 VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED = "git-blame-all-displayed"
 
@@ -17,8 +23,11 @@ VIEW_SETTINGS_KEY_WRAP_PREV = "word_wrap_prev"  # Made up by us
 VIEW_SETTINGS_KEY_INDENT_GUIDE = "draw_indent_guides"  # Made up by us
 VIEW_SETTINGS_KEY_INDENT_GUIDE_PREV = "draw_indent_guides_prev"  # Made up by us
 
-dim=") blend(var(--background) 35%)"
+dimmed=") blend(var(--background) 30%)"
 color_list = [ "redish", "orangish", "purplish", "yellowish", "greenish", "cyanish", "bluish", "pinkish" ]
+
+#         view_id:  { "sha": List[phantom]}
+my_views: Dict[int, Dict[str, List[Tuple[int,str, str, str, str, str, bool]]]] = {}
 
 class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
     def _view(self) -> View:
@@ -35,7 +44,11 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
 
     def on_modified_async(self):
         self.view.settings().set('shas', [])
-        self.view.settings().set('myphantoms', [])
+        global my_views
+        try:
+            del(my_views[self.view.id()])
+        except KeyError:
+            pass
 
 
     def on_hover(self, point: int, hover_zone: int) -> None:
@@ -73,7 +86,7 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
         self.view.show_popup(popup_text, location=point,flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY, max_width=500, on_navigate=self.handle_phantom_button)
 
 
-class BlameShowAll(BaseBlame, MyClass, sublime_plugin.TextCommand):
+class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
     HORIZONTAL_SCROLL_DELAY_MS = 100
 
     # Overrides (TextCommand) ----------------------------------------------------------
@@ -81,29 +94,74 @@ class BlameShowAll(BaseBlame, MyClass, sublime_plugin.TextCommand):
         super().__init__(view)
         self.phantom_set = sublime.PhantomSet(self.view, self.phantom_set_key())
         self.pattern = None
+        self.highlighted_commit = ''
+
+    def highlight_this_commit(self, href: str) -> None:
+        all_shas = my_views[self.view.id()]
+        if href == self.highlighted_commit:
+            self.phantom_set.update([self.phantom_creator(item) for sublist in all_shas.values() for item in sublist])
+            self.highlighted_commit = ''
+            return
+        relevant_sha = all_shas[href]
+        unrelevant_shas = [item for sublist in all_shas.items() for item in sublist[1] if sublist[0] != href]
+        self.subsequent_phantom_setter(unrelevant_shas, relevant_sha)
+        self.highlighted_commit = href
+        return
+
+    def phantom_creator(self, phantom_tuple: Tuple[int, str, str, str, str, str, bool], dim: Dim=Dim.UNSET) -> Phantom:
+        if dim == Dim.UNSET:
+            sha_color = phantom_tuple[1] + dimmed if phantom_tuple[6] else phantom_tuple[1]
+            text_dim = '25'
+        elif dim == Dim.NO:
+            sha_color = phantom_tuple[1]
+            text_dim = '70'
+        elif dim == Dim.YES:
+            text_dim = '10'
+            sha_color = phantom_tuple[1] + dimmed
+
+        return sublime.Phantom(
+            Region(self.view.text_point(phantom_tuple[0] - 1, 0)),
+            blame_all_phantom_html_template.format(
+                sha_color = sha_color,
+                sha=phantom_tuple[2],
+                text_dim=text_dim,
+                visualsha=phantom_tuple[3],
+                author=phantom_tuple[4],
+                date=phantom_tuple[5]
+            ),
+            sublime.LAYOUT_INLINE,
+            self.highlight_this_commit,
+        )
+
+    def init_phantom_setter(self, phantoms: List[Tuple[int, str, str, str, str, str, bool]]) -> None:
+        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
+        self.settings_for_blame()
+        self.phantom_set.update([self.phantom_creator(phantom) for phantom in phantoms])
+        # Bring the phantoms into view without the user needing to manually scroll left.
+        self.horizontal_scroll_to_limit(left=True)
+        return
+
+    def subsequent_phantom_setter(self, dim_phantoms: List[Tuple[int, str, str, str, str, str, bool]], hl_phantoms: List[Tuple[int, str, str, str, str, str, bool]]) -> None:
+        self.phantom_set.update([self.phantom_creator(phantom, Dim.YES) for phantom in dim_phantoms]+[self.phantom_creator(phantom, Dim.NO) for phantom in hl_phantoms])
+        # Bring the phantoms into view without the user needing to manually scroll left.
+        self.horizontal_scroll_to_limit(left=True)
+        return
 
     def run(self, edit: Edit):
         if not self.has_suitable_view():
             self.tell_user_to_save()
             return
 
+        file_name = self.view.file_name()
+        if file_name is None:
+            return
+
         self.view.erase_phantoms(self.phantom_set_key())
-        phantoms = []  # type: list[sublime.Phantom] # type: ignore[misc]
-
-        myphantoms = self.view.settings().get("myphantoms", [])
-        if myphantoms:
-            self.phantom_set.update(myphantoms)
-            self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
-            self.settings_for_blame()
-            # Bring the phantoms into view without the user needing to manually scroll left.
-            self.horizontal_scroll_to_limit(left=True)
-
-        shas: List[str] = []
+        phantoms: List[Tuple[int,str, str, str, str, str, bool]] = []
 
         # If they are currently shown, toggle them off and return.
         if self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, False):
             self.view.hide_popup()
-            self.phantom_set.update(phantoms)
             self.view.settings().erase(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED)
             self.view.run_command("blame_restore_rulers")
             # Workaround a visible empty space sometimes remaining in the viewport.
@@ -111,8 +169,22 @@ class BlameShowAll(BaseBlame, MyClass, sublime_plugin.TextCommand):
             self.horizontal_scroll_to_limit(left=True)
             return
 
+        global my_views
         try:
-            blame_output = self.get_blame_text(self.view.file_name())
+            myphantoms: List[Tuple[int,str, str, str, str, str, bool]] = []
+            shas_for_view: Dict[str, List[Tuple[int,str, str, str, str, str, bool]]] = my_views[self.view.id()]
+            for val in shas_for_view.values():
+                for phant in val:
+                    myphantoms.append(phant)
+            self.init_phantom_setter(myphantoms)
+            return
+        except KeyError:
+            pass
+
+        shas_for_view: Dict[str, List[Tuple[int,str, str, str, str, str, bool]]] = {}
+
+        try:
+            blame_output = self.get_blame_text(file_name)
         except Exception as e:
             self.communicate_error(e)
             return
@@ -134,7 +206,8 @@ class BlameShowAll(BaseBlame, MyClass, sublime_plugin.TextCommand):
         hash_color = {}
         counter = 0
         prev_sha = ''
-        modified = False
+        dim = False
+        shas: List[str] = []
         for blame in blames:
 
             line_number = int(blame["line_number"])
@@ -154,51 +227,40 @@ class BlameShowAll(BaseBlame, MyClass, sublime_plugin.TextCommand):
 
                 if prev_sha != sha:
                     try:
-                        if hash_color[sha] == hash_color[prev_sha] and not modified:
-                            modified = True
-                            sha_color+=dim
+                        if hash_color[sha] == hash_color[prev_sha] and not dim:
+                            dim = True
                         else:
-                            modified = False
+                            dim = False
                     except KeyError:
-                        modified = False
-                elif modified:
-                    sha_color+=dim
+                        dim = False
 
             if prev_sha != sha:
                 visualsha=sha
                 prev_sha = sha
                 if len(blame["author"]) > max_author_len:
-                    author = blame["author"][:max_author_len -1] + '…'
+                    author: str = blame["author"][:max_author_len -1] + '…'
                 else:
-                    author = blame["author"]
+                    author: str = blame["author"]
                 author=author + "&nbsp;" * (max_author_len - len(author))
-                date=blame["date"]
+                date: str=blame["date"]
             else:
                 visualsha="&nbsp;"*sha_length
                 author="&nbsp;" * max_author_len
-                date="&nbsp;"*10
+                date: str="&nbsp;"*10
 
-            phantom = sublime.Phantom(
-                self.phantom_region(line_number),
-                blame_all_phantom_html_template.format(
-                    sha_color=sha_color,
-                    sha=sha,
-                    visualsha=visualsha,
-                    author=author,
-                    date=date
-                ),
-                sublime.LAYOUT_INLINE,
-                self.highlight_this_commit,
-            )
+            phantom = (line_number, sha_color, sha, visualsha, author, date, dim)
             phantoms.append(phantom)
 
-        self.phantom_set.update(phantoms)
-        # myphantoms = self.view.settings().set("myphantoms", phantoms)
-        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
+            try:
+                commit_phantoms: List[Tuple[int, str, str, str, str, str, bool]] = shas_for_view[sha]
+            except:
+                commit_phantoms: List[Tuple[int, str, str, str, str, str, bool]] = []
+            commit_phantoms.append(phantom)
+            shas_for_view[sha] = commit_phantoms
+
         self.view.settings().set("shas", shas)
-        self.settings_for_blame()
-        # Bring the phantoms into view without the user needing to manually scroll left.
-        self.horizontal_scroll_to_limit(left=True)
+        my_views[self.view.id()] = shas_for_view
+        self.init_phantom_setter(phantoms)
 
 
     # Overrides (BaseBlame) ------------------------------------------------------------

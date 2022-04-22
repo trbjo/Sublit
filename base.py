@@ -97,11 +97,6 @@ class BaseBlame(metaclass=ABCMeta):
         else:
             return {}
 
-    def highlight_this_commit(self, href: str) -> None:
-        print(f'{href=}')
-        print(self._view().settings().get('shas'))
-
-
     def handle_phantom_button(self, href: str) -> None:
         url = urlparse(href)
         querystring = parse_qs(url.query)
