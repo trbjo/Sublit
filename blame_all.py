@@ -96,7 +96,18 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         self.highlighted_commit = ''
 
     def highlight_this_commit(self, href: str) -> None:
-        all_shas = my_views[self.view.id()]
+        try:
+            all_shas = my_views[self.view.id()]
+        except KeyError:
+            self.view.hide_popup()
+            self.view.erase_phantoms(self.phantom_set_key())
+            self.view.settings().erase(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED)
+            self.view.run_command("blame_restore_rulers")
+            # Workaround a visible empty space sometimes remaining in the viewport.
+            self.horizontal_scroll_to_limit(left=False)
+            self.horizontal_scroll_to_limit(left=True)
+            return
+
         if href == self.highlighted_commit:
             self.phantom_set.update([self.phantom_creator(item) for sublist in all_shas.values() for item in sublist])
             self.highlighted_commit = ''
