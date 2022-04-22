@@ -26,7 +26,7 @@ class BaseBlame(metaclass=ABCMeta):
         return self.run_git(path, cli_args)
 
     def get_blame_text(self, path: str, **kwargs: List[str]):
-        cli_args = ["blame", "--show-name", "--minimal", "-w"]
+        cli_args = ["blame", "--show-name", "--minimal"]
         cli_args.extend(self.extra_cli_args(**kwargs))
         cli_args.extend(pkg_settings().get(PKG_SETTINGS_KEY_CUSTOMBLAMEFLAGS, []))
         cli_args.extend(["--", os.path.basename(path)])
