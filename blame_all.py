@@ -96,7 +96,6 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         super().__init__(view)
         self.phantom_set = sublime.PhantomSet(self.view, self.phantom_set_key())
         self.pattern = None
-        self.string_length: int = 10
         self.empty_html: str = ''
         self.max_author_len: int = 13
         self.actual_author_max_len: int = 0
