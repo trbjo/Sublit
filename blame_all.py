@@ -69,7 +69,7 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
             return
         sha: str = shas[point_to_line]
         if sha == len(sha) * '0':
-            self.view.show_popup("Not committed yet", location=point,flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY)
+            self.view.show_popup('<body style="padding: 4px; margin: 0; font-family: system-ui;"><div>Not committed yet</div></body>', location=point,flags=sublime.HIDE_ON_MOUSE_MOVE_AWAY)
             return
 
         try:
@@ -77,7 +77,7 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
             elems: List[str] = raw_desc.rstrip().split('\n', 1)
             commmit_id = elems[0][7:]
             desc: str = elems[1].replace('\n', '<br>')
-            popup_text = f'<body style="padding: 4px; margin: 0; font-family: Inter;"><a href="copy?sha={commmit_id}">{commmit_id}</a><div>{desc}</div></body>'
+            popup_text = f'<body style="padding: 4px; margin: 0; font-family: system-ui;"><a href="copy?sha={commmit_id}">{commmit_id}</a><div>{desc}</div></body>'
         except Exception as e:
             self.communicate_error(e)
             return
