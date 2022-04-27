@@ -227,7 +227,8 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
             shas.append(sha)
             sha_length=len(sha)
             if sha == sha_length * '0':
-                sha_color='foreground) blend(var(--background) 30%)'
+                sha_color='foreground'
+                dim = True
             else:
                 try:
                     sha_color: str = hash_color[sha]
