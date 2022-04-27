@@ -56,21 +56,17 @@ blame_all_phantom_html_template = """
     <body style="padding: 0px 6px 4px 0; margin: 0; border-right: 5px solid color(var(--{sha_color}) blend(var(--background) {sha_dim}%)));">
         <a style="text-decoration:none;" href="{sha}">
             <span style="color: color(var(--foreground) blend(var(--background) {text_dim}%));" class="message">
-                {visualsha}&nbsp;&nbsp;{author}&nbsp;&nbsp;{date}
+                {sha}&nbsp;&nbsp;{author}&nbsp;&nbsp;{date}
             </span>
         </a>
     </body>
 """
 
 
-# ------------------------------------------------------------
-
-commit_desc_popup_html_template = """
-    <body style="padding: 0px 6px 4px 0; border-right: 5px solid color(var(--{commit_id}));">
-        <a style="text-decoration:none;" href="copy?sha={sha}">
-            <span style="color: color(var(--foreground) blend(var(--background) 25%));" class="message">
-                {visualsha}&nbsp;&nbsp;{author}&nbsp;&nbsp;{date}
-            </span>
+blame_all_phantom_html_template_empty = """
+    <body style="padding: 0px 6px 4px 0; margin: 0; border-right: 5px solid color(var(--{{sha_color}}) blend(var(--background) {{sha_dim}}%)));">
+        <a style="text-decoration:none;" href="{{sha}}">
+            <span class="message">{length}</span>
         </a>
     </body>
 """
