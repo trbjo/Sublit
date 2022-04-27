@@ -132,18 +132,16 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         return ret_str + "&nbsp;" * (self.actual_author_max_len - len(author))
 
 
-    def phantom_creator(self, phantom_tuple: Tuple[int, str, str, str, str, str, str]) -> Phantom:
-        """line_number, sha_color, sha, author, date, color_dim, text_dim"""
-
+    def phantom_creator(self, line_number: int, sha_color: str, sha: str, author: str, date: str, sha_dim: str, text_dim: str) -> Phantom:
         return sublime.Phantom(
-            Region(self.view.text_point(phantom_tuple[0] - 1, 0)),
+            Region(self.view.text_point(line_number - 1, 0)),
             blame_all_phantom_html_template.format(
-                sha_color = phantom_tuple[1],
-                sha=phantom_tuple[2],
-                author=phantom_tuple[3],
-                date=phantom_tuple[4],
-                sha_dim=phantom_tuple[5],
-                text_dim=phantom_tuple[6],
+                sha_color=sha_color,
+                sha=sha,
+                author=author,
+                date=date,
+                sha_dim=sha_dim,
+                text_dim=text_dim,
             ),
             sublime.LAYOUT_INLINE,
             self.highlight_this_commit
@@ -162,7 +160,6 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         author: str = ''
         date: str = ''
         color_dim: str = ''
-        # phantom = (HunkType.NEW_HUNK, line_number, sha_color, sha, raw_author, date, color_dim, text_dim)
         for line in lines:
             line_number: int = line[1]
 
@@ -193,7 +190,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
                 else:
                     color_dim: str = '40'
                     text_dim = '25'
-                phantoms.append(self.phantom_creator((line_number, sha_color, sha, author, date, color_dim, text_dim)))
+                phantoms.append(self.phantom_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
 
             elif line[0] == HunkType.NEW_HUNK:
                 sha_color: str = line[2]
@@ -210,7 +207,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
                 else:
                     color_dim: str = '40' if line[6] else '100'
                     text_dim = '25'
-                phantoms.append(self.phantom_creator((line_number, sha_color, sha, author, date, color_dim, text_dim)))
+                phantoms.append(self.phantom_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
             else:
                 raise Exception('Invalid HunkType')
 
