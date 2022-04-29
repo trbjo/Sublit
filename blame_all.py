@@ -1,10 +1,10 @@
 import sublime
 import sublime_plugin
-from typing import List, Tuple, Union, Dict
-from sublime import Edit, Phantom, View, Region
+from sublime_api import view_add_phantom, view_erase_phantoms
+from typing import List, Tuple, Union
+from sublime import LAYOUT_INLINE, Edit, View, Region
 
 from .base import BaseBlame
-from .templates import blame_all_phantom_html_template, blame_all_phantom_html_template_empty
 from enum import IntEnum
 
 class Dim(IntEnum):
@@ -29,7 +29,6 @@ VIEW_SETTINGS_KEY_INDENT_GUIDE = "draw_indent_guides"  # Made up by us
 VIEW_SETTINGS_KEY_INDENT_GUIDE_PREV = "draw_indent_guides_prev"  # Made up by us
 
 color_list = [ "redish", "orangish", "purplish", "yellowish", "greenish", "cyanish", "bluish", "pinkish" ]
-my_views: Dict[int, List[Union[Tuple[HunkType, int], Tuple[HunkType, int, str, str, str, str, bool]]]] = {}
 
 class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
     def _view(self) -> View:
@@ -45,13 +44,8 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
         self.run(None)
 
     def on_modified_async(self):
-        self.view.settings().set('shas', [])
-        global my_views
-        try:
-            del(my_views[self.view.id()])
-        except KeyError:
-            pass
-
+        self.view.settings().erase('shas')
+        view_erase_phantoms(self.view.id(), "blame_all")
 
     def on_hover(self, point: int, hover_zone: int) -> None:
         if not self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED):
@@ -94,7 +88,9 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
     # Overrides (TextCommand) ----------------------------------------------------------
     def __init__(self, view: View):
         super().__init__(view)
-        self.phantom_set = sublime.PhantomSet(self.view, self.phantom_set_key())
+        self.key_name: str = 'blame_all'
+        self.regs_ready_formatting: List[Tuple[Region, str]] = []
+        self.raw_list_formatting: List[Union[Tuple[HunkType, int], Tuple[HunkType, int, str, str, str, str, bool]]] = []
         self.pattern = None
         self.empty_html: str = ''
         self.max_author_len: int = 13
@@ -103,11 +99,9 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         self.highlighted_commit = ''
 
     def highlight_this_commit(self, href: str) -> None:
-        try:
-            this_view = my_views[self.view.id()]
-        except KeyError:
+        if not self.raw_list_formatting:
             self.view.hide_popup()
-            self.view.erase_phantoms(self.phantom_set_key())
+            view_erase_phantoms(self.view.id(), self.key_name)
             self.view.settings().erase(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED)
             self.view.run_command("blame_restore_rulers")
             # Workaround a visible empty space sometimes remaining in the viewport.
@@ -116,10 +110,10 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
             return
 
         if href == self.highlighted_commit:
-            self.phantom_setter(this_view)
+            self.phantom_setter()
             self.highlighted_commit = ''
         else:
-            self.phantom_setter(this_view, href)
+            self.phantom_setter(href)
             self.highlighted_commit = href
 
 
@@ -130,50 +124,32 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
             ret_str: str = author
         return ret_str + "&nbsp;" * (self.actual_author_max_len - len(author))
 
+    def region_creator(self, line_number: int, sha_color: str, sha: str, author: str, date: str, sha_dim: str, text_dim: str) -> Tuple[Region, str]:
+        return (
+                Region(self.view.text_point(line_number - 1, 0)),
+                f"""<body style="padding: 0px 6px 4px 0; margin: 0; border-right: 5px solid color(var(--{sha_color}) blend(var(--background) {sha_dim}%)));"><a style="text-decoration:none;" href="{sha}"><span style="color: color(var(--foreground) blend(var(--background){text_dim}%));" class="message">{sha}&nbsp;&nbsp;{author}&nbsp;&nbsp;{date}</span></a></body>"""
+                )
 
-    def phantom_creator(self, line_number: int, sha_color: str, sha: str, author: str, date: str, sha_dim: str, text_dim: str) -> Phantom:
-        return sublime.Phantom(
-            Region(self.view.text_point(line_number - 1, 0)),
-            blame_all_phantom_html_template.format(
-                sha_color=sha_color,
-                sha=sha,
-                author=author,
-                date=date,
-                sha_dim=sha_dim,
-                text_dim=text_dim,
-            ),
-            sublime.LAYOUT_INLINE,
-            self.highlight_this_commit
-        )
 
-    def phantom_setter(self, lines: List[Union[Tuple[HunkType, int], Tuple[HunkType, int, str, str, str, str, bool]]], hl_sha: Union[str,None]=None) -> None:
+    def phantom_setter(self, hl_sha: Union[str,None]=None) -> None:
         if self.actual_author_max_len > self.max_author_len:
             self.actual_author_max_len = self.max_author_len
-
         space_string: str = (self.actual_author_max_len + 14 + self.sha_length) * '&nbsp;'
-        self.empty_html: str = blame_all_phantom_html_template_empty.format(length=space_string)
 
-        phantoms: List[Phantom] = []
+        self.regs_ready_formatting = []
         sha_color: str = ''
         sha: str = ''
         author: str = ''
         date: str = ''
         color_dim: str = ''
-        for line in lines:
+        for line in self.raw_list_formatting:
             line_number: int = line[1]
 
             if line[0] == HunkType.SAME_AS_PREV_LINE:
-                phantoms.append(sublime.Phantom(
-                                                Region(self.view.text_point(line_number - 1, 0)),
-                                                self.empty_html.format(
-                                                                       sha_color = sha_color,
-                                                                       sha=sha,
-                                                                       sha_dim=color_dim
-                                                                       ),
-                                                sublime.LAYOUT_INLINE,
-                                                self.highlight_this_commit
-                                                ))
-
+                self.regs_ready_formatting.append((
+                Region(self.view.text_point(line_number - 1, 0)),
+                       f'<body style="padding: 0px 6px 4px 0; margin: 0; border-right: 5px solid color(var(--{sha_color}) blend(var(--background) {color_dim}%)));"> <a style="text-decoration:none;" href="{sha}"><span class="message">{space_string}</span></a></body>'
+                        ))
             elif line[0] == HunkType.NOT_COMMITTED:
                 sha_color: str = 'foreground'
                 sha = '0' * self.sha_length
@@ -189,8 +165,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
                 else:
                     color_dim: str = '40'
                     text_dim = '25'
-                phantoms.append(self.phantom_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
-
+                self.regs_ready_formatting.append(self.region_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
             elif line[0] == HunkType.NEW_HUNK:
                 sha_color: str = line[2]
                 sha: str = line[3]
@@ -206,19 +181,18 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
                 else:
                     color_dim: str = '40' if line[6] else '100'
                     text_dim = '25'
-                phantoms.append(self.phantom_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
+                self.regs_ready_formatting.append(self.region_creator(line_number, sha_color, sha, author, date, color_dim, text_dim))
             else:
                 raise Exception('Invalid HunkType')
 
-        self.phantom_set.update(phantoms)
-        # Bring the phantoms into view without the user needing to manually scroll left.
-        self.horizontal_scroll_to_limit(left=True)
+        self.set_phantoms_from_regions()
 
 
-    def init_phantom_setter(self, lines: List[Union[Tuple[HunkType, int], Tuple[HunkType, int, str, str, str, str, bool]]]) -> None:
-        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
-        self.settings_for_blame()
-        self.phantom_setter(lines)
+    def set_phantoms_from_regions(self) -> None:
+        buffer_id = self.view.id()
+        self.view.erase_phantoms(self.key_name)
+        for line in self.regs_ready_formatting:
+            view_add_phantom(buffer_id, self.key_name, line[0], line[1], LAYOUT_INLINE, self.highlight_this_commit)
 
     def run(self, edit: Edit):
         if not self.has_suitable_view():
@@ -229,7 +203,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         if file_name is None:
             return
 
-        self.view.erase_phantoms(self.phantom_set_key())
+        self.view.erase_phantoms(self.key_name)
 
         # If they are currently shown, toggle them off and return.
         if self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, False):
@@ -241,12 +215,14 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
             self.horizontal_scroll_to_limit(left=True)
             return
 
-        global my_views
-        try:
-            self.init_phantom_setter(my_views[self.view.id()])
+        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
+        self.settings_for_blame()
+        # Bring the phantoms into view without the user needing to manually scroll left.
+        self.horizontal_scroll_to_limit(left=True)
+
+        if self.regs_ready_formatting:
+            self.set_phantoms_from_regions()
             return
-        except KeyError:
-            pass
 
         try:
             blame_output = self.get_blame_text(file_name)
@@ -266,7 +242,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
 
         hash_color = {}
         self.sha_length=len(blames[0]["sha"])
-        phantoms: List[Union[Tuple[HunkType, int], Tuple[HunkType, int, str, str, str, str, bool]]] = []
+        self.raw_list_formatting = []
         counter = 0
         prev_sha = ''
         dim = False
@@ -301,11 +277,11 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
                     dim = False
                 phantom = (HunkType.NEW_HUNK, line_number, sha_color, sha, raw_author, date, dim)
                 prev_sha = sha
-            phantoms.append(phantom)
+            self.raw_list_formatting.append(phantom)
 
         self.view.settings().set("shas", shas)
-        self.init_phantom_setter(phantoms)
-        my_views[self.view.id()] = phantoms
+        self.phantom_setter()
+
 
     # Overrides (BaseBlame) ------------------------------------------------------------
 
@@ -362,7 +338,6 @@ class BlameEraseAll(sublime_plugin.TextCommand):
 
     def run(self, edit: Edit) -> None:
         sublime.status_message("The git blame result is cleared.")
-        self.view.erase_phantoms(BlameShowAll.phantom_set_key())
         self.view.settings().erase(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED)
         self.view.run_command("blame_restore_rulers")
 
