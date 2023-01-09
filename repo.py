@@ -1,13 +1,14 @@
 import os
 
 import sublime
+
 from . import GitWindowCommand, git_root_exist
 
 
 class GitInit(object):
     def git_init(self, directory):
         if os.path.exists(directory):
-            self.run_command(['git', 'init'], self.git_inited, working_dir=directory)
+            self.run_command(["git", "init"], self.git_inited, working_dir=directory)
         else:
             sublime.status_message("Directory does not exist.")
 
@@ -17,7 +18,9 @@ class GitInit(object):
 
 class GitInitCommand(GitInit, GitWindowCommand):
     def run(self):
-        self.get_window().show_input_panel("Git directory", self.get_working_dir(), self.git_init, None, None)
+        self.get_window().show_input_panel(
+            "Git directory", self.get_working_dir(), self.git_init, None, None
+        )
 
     def is_enabled(self):
         if not git_root_exist(self.get_working_dir()):
@@ -28,18 +31,17 @@ class GitInitCommand(GitInit, GitWindowCommand):
 
 class GitBranchCommand(GitWindowCommand):
     may_change_files = True
-    command_to_run_after_branch = ['checkout']
+    command_to_run_after_branch = ["checkout"]
     extra_flags = []
 
     def run(self):
-        self.run_command(['git', 'branch', '--no-color'] + self.extra_flags, self.branch_done)
+        self.run_command(
+            ["git", "branch", "--no-color"] + self.extra_flags, self.branch_done
+        )
 
     def branch_done(self, result):
-        self.results = result.rstrip().split('\n')
-        self.quick_panel(
-            self.results, self.panel_done,
-            sublime.MONOSPACE_FONT
-        )
+        self.results = result.rstrip().split("\n")
+        self.quick_panel(self.results, self.panel_done, sublime.MONOSPACE_FONT)
 
     def panel_done(self, picked):
         if 0 > picked < len(self.results):
@@ -48,7 +50,10 @@ class GitBranchCommand(GitWindowCommand):
         if picked_branch.startswith("*"):
             return
         picked_branch = picked_branch.strip()
-        self.run_command(['git'] + self.command_to_run_after_branch + [picked_branch], self.update_status)
+        self.run_command(
+            ["git"] + self.command_to_run_after_branch + [picked_branch],
+            self.update_status,
+        )
 
     def update_status(self, result):
         self.panel(result)
@@ -59,30 +64,27 @@ class GitBranchCommand(GitWindowCommand):
 
 
 class GitMergeCommand(GitBranchCommand):
-    command_to_run_after_branch = ['merge']
-    extra_flags = ['--no-merge']
+    command_to_run_after_branch = ["merge"]
+    extra_flags = ["--no-merge"]
 
 
 class GitDeleteBranchCommand(GitBranchCommand):
-    command_to_run_after_branch = ['branch', '-d']
+    command_to_run_after_branch = ["branch", "-d"]
 
 
 class GitForceDeleteBranchCommand(GitDeleteBranchCommand):
-    command_to_run_after_branch = ['branch', '-D']
+    command_to_run_after_branch = ["branch", "-D"]
 
 
 class GitNewBranchCommand(GitWindowCommand):
     def run(self):
-        self.get_window().show_input_panel(
-            "Branch name", "",
-            self.on_input, None, None
-        )
+        self.get_window().show_input_panel("Branch name", "", self.on_input, None, None)
 
     def on_input(self, branchname):
         if branchname.strip() == "":
             self.panel("No branch name provided")
             return
-        self.run_command(['git', 'checkout', '-b', branchname], self.branch_done)
+        self.run_command(["git", "checkout", "-b", branchname], self.branch_done)
 
     def branch_done(self, result):
         self.panel(result)
@@ -91,13 +93,13 @@ class GitNewBranchCommand(GitWindowCommand):
 
 
 class GitTrackRemoteBranchCommand(GitBranchCommand):
-    command_to_run_after_branch = ['checkout', '--track']
-    extra_flags = ['--remote']
+    command_to_run_after_branch = ["checkout", "--track"]
+    extra_flags = ["--remote"]
 
 
 class GitSetUpstreamBranchCommand(GitBranchCommand):
-    command_to_run_after_branch = ['branch', '--set-upstream-to']
-    extra_flags = ['--remote']
+    command_to_run_after_branch = ["branch", "--set-upstream-to"]
+    extra_flags = ["--remote"]
 
 
 class GitNewTagCommand(GitWindowCommand):
@@ -108,18 +110,18 @@ class GitNewTagCommand(GitWindowCommand):
         if not tagname.strip():
             self.panel("No branch name provided")
             return
-        self.run_command(['git', 'tag', tagname])
+        self.run_command(["git", "tag", tagname])
 
 
 class GitDeleteTagCommand(GitWindowCommand):
     def run(self):
-        self.run_command(['git', 'tag'], self.fetch_tag)
+        self.run_command(["git", "tag"], self.fetch_tag)
 
     def fetch_tag(self, result):
         if result.strip() == "":
             sublime.status_message("No Tags provided.")
             return
-        self.results = result.rstrip().split('\n')
+        self.results = result.rstrip().split("\n")
         self.quick_panel(self.results, self.panel_done)
 
     def panel_done(self, picked):
@@ -127,16 +129,16 @@ class GitDeleteTagCommand(GitWindowCommand):
             return
         picked_tag = self.results[picked]
         picked_tag = picked_tag.strip()
-        if sublime.ok_cancel_dialog("Delete \"%s\" Tag?" % picked_tag, "Delete"):
-            self.run_command(['git', 'tag', '-d', picked_tag])
+        if sublime.ok_cancel_dialog('Delete "%s" Tag?' % picked_tag, "Delete"):
+            self.run_command(["git", "tag", "-d", picked_tag])
 
 
 class GitShowTagsCommand(GitWindowCommand):
     def run(self):
-        self.run_command(['git', 'tag'], self.fetch_tag)
+        self.run_command(["git", "tag"], self.fetch_tag)
 
     def fetch_tag(self, result):
-        self.results = result.rstrip().split('\n')
+        self.results = result.rstrip().split("\n")
         self.quick_panel(self.results, self.panel_done)
 
     def panel_done(self, picked):
@@ -144,18 +146,18 @@ class GitShowTagsCommand(GitWindowCommand):
             return
         picked_tag = self.results[picked]
         picked_tag = picked_tag.strip()
-        self.run_command(['git', 'show', picked_tag])
+        self.run_command(["git", "show", picked_tag])
 
 
 class GitCheckoutTagCommand(GitWindowCommand):
     def run(self):
-        self.run_command(['git', 'tag'], self.fetch_tag)
+        self.run_command(["git", "tag"], self.fetch_tag)
 
     def fetch_tag(self, result):
         if result.strip() == "":
             sublime.status_message("No Tags provided.")
             return
-        self.results = result.rstrip().split('\n')
+        self.results = result.rstrip().split("\n")
         self.quick_panel(self.results, self.panel_done)
 
     def panel_done(self, picked):
@@ -163,21 +165,24 @@ class GitCheckoutTagCommand(GitWindowCommand):
             return
         picked_tag = self.results[picked]
         picked_tag = picked_tag.strip()
-        self.run_command(['git', 'checkout', "tags/%s" % picked_tag])
+        self.run_command(["git", "checkout", "tags/%s" % picked_tag])
 
 
 class GitPullCurrentBranchCommand(GitWindowCommand):
-    command_to_run_after_describe = 'pull'
+    command_to_run_after_describe = "pull"
 
     def run(self):
-        self.run_command(['git', 'describe', '--contains', '--all', 'HEAD'], callback=self.describe_done)
+        self.run_command(
+            ["git", "describe", "--contains", "--all", "HEAD"],
+            callback=self.describe_done,
+        )
 
     def describe_done(self, result):
         self.current_branch = result.strip()
-        self.run_command(['git', 'remote'], callback=self.remote_done)
+        self.run_command(["git", "remote"], callback=self.remote_done)
 
     def remote_done(self, result):
-        self.remotes = result.rstrip().split('\n')
+        self.remotes = result.rstrip().split("\n")
         if len(self.remotes) == 1:
             self.panel_done()
         else:
@@ -188,8 +193,15 @@ class GitPullCurrentBranchCommand(GitWindowCommand):
             return
         self.picked_remote = self.remotes[picked]
         self.picked_remote = self.picked_remote.strip()
-        self.run_command(['git', self.command_to_run_after_describe, self.picked_remote, self.current_branch])
+        self.run_command(
+            [
+                "git",
+                self.command_to_run_after_describe,
+                self.picked_remote,
+                self.current_branch,
+            ]
+        )
 
 
 class GitPushCurrentBranchCommand(GitPullCurrentBranchCommand):
-    command_to_run_after_describe = 'push'
+    command_to_run_after_describe = "push"

@@ -1,12 +1,12 @@
 import os
 import re
 import subprocess
-from sublime import View
 from abc import ABCMeta, abstractmethod
-from urllib.parse import parse_qs, urlparse
 from typing import List, Union
+from urllib.parse import parse_qs, urlparse
 
 import sublime
+from sublime import View
 
 from .settings import PKG_SETTINGS_KEY_CUSTOMBLAMEFLAGS, pkg_settings
 
@@ -22,7 +22,7 @@ class BaseBlame(metaclass=ABCMeta):
         ).decode()
 
     def get_commit_desc(self, sha: str, path: str) -> str:
-        cli_args = ["rev-list", "--format=%B", "--max-count=1", sha.strip('^')]
+        cli_args = ["rev-list", "--format=%B", "--max-count=1", sha.strip("^")]
         return self.run_git(path, cli_args)
 
     def get_blame_text(self, path: str, **kwargs: List[str]):
@@ -137,7 +137,7 @@ class BaseBlame(metaclass=ABCMeta):
     def tell_user_to_save(self):
         self.communicate_error("Please save file changes to disk first.")
 
-    def communicate_error(self, e: Union[Exception,str], modal=True) -> None:
+    def communicate_error(self, e: Union[Exception, str], modal=True) -> None:
         user_msg = "Git blame:\n\n{0}".format(e)
         if isinstance(e, subprocess.CalledProcessError):
             user_msg += "\n\n{0}".format(e.output.decode())

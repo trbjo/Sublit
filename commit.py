@@ -1,12 +1,19 @@
 import codecs
 import functools
-import tempfile
 import os
-from subprocess import check_output, Popen
+import tempfile
+from subprocess import Popen, check_output
 
 import sublime
 import sublime_plugin
-from . import GitTextCommand, GitWindowCommand, plugin_file, view_contents, _make_text_safeish
+
+from . import (
+    GitTextCommand,
+    GitWindowCommand,
+    _make_text_safeish,
+    plugin_file,
+    view_contents,
+)
 from .add import GitAddSelectedHunkCommand
 
 
@@ -16,23 +23,22 @@ class PromptGitCommand(GitWindowCommand):
     def is_enabled(self):
         view = self.window.active_view()
         if view:
-            scope = view.scope_name(view.sel()[0].begin()).split(' ')[0]
-            if scope == 'text.git.commit':
+            scope = view.scope_name(view.sel()[0].begin()).split(" ")[0]
+            if scope == "text.git.commit":
                 return True
         return False
 
     def run(self):
         git_actions_pretty = [
-        '1: Commit, Rebase and Push',
-        '2: Commit and Push',
-        '3: Commit only',
-        '4: Close without committing'
+            "1: Commit, Rebase and Push",
+            "2: Commit and Push",
+            "3: Commit only",
+            "4: Close without committing",
         ]
 
         self.window.show_quick_panel(
-            git_actions_pretty,
-            self.transform,
-            selected_index=self.last_selected)
+            git_actions_pretty, self.transform, selected_index=self.last_selected
+        )
 
     def transform(self, i: int) -> None:
         view = sublime.active_window().active_view()
@@ -42,14 +48,14 @@ class PromptGitCommand(GitWindowCommand):
         if file_name is None:
             return
 
-        pwd = file_name.rsplit('/', 1)[0]
+        pwd = file_name.rsplit("/", 1)[0]
 
         if i == -1:
             return
         self.last_selected: int = i
 
         if i != 3:
-            view.run_command('save')
+            view.run_command("save")
 
         view.set_scratch(True)
         view.close()
@@ -58,12 +64,16 @@ class PromptGitCommand(GitWindowCommand):
             return
 
         if i == 0:
-            self.run_command(['git', '-C', pwd, 'pull', '--rebase'], callback=self.push, working_dir=pwd)
+            self.run_command(
+                ["git", "-C", pwd, "pull", "--rebase"],
+                callback=self.push,
+                working_dir=pwd,
+            )
         else:
             self.push(pwd)
 
     def push(self, _) -> None:
-        self.run_command(['git', 'push'])
+        self.run_command(["git", "push"])
 
 
 class GitCommitCommand(sublime_plugin.WindowCommand):
@@ -73,16 +83,18 @@ class GitCommitCommand(sublime_plugin.WindowCommand):
     non_git_dirs = []
 
     def anything_to_commit(self, pwd: str) -> bool:
-        get_status = ['git', '-C', pwd, 'status', '--porcelain', '--untracked-files=no']
-        res_list = check_output(get_status).decode('utf-8').split('\n')
-        return any(git_status[0].isalpha() for git_status in res_list if git_status != '')
+        get_status = ["git", "-C", pwd, "status", "--porcelain", "--untracked-files=no"]
+        res_list = check_output(get_status).decode("utf-8").split("\n")
+        return any(
+            git_status[0].isalpha() for git_status in res_list if git_status != ""
+        )
 
     def run(self):
-        pwd = self.window.active_view().file_name().rsplit('/', 1)[0]
+        pwd = self.window.active_view().file_name().rsplit("/", 1)[0]
         try:
-            Popen(['git', '-C', pwd, 'commit', '-v'])
+            Popen(["git", "-C", pwd, "commit", "-v"])
         except:
-            sublime.status_message('Nothing to commit')
+            sublime.status_message("Nothing to commit")
 
     def is_enabled(self):
         view = self.window.active_view()
@@ -93,8 +105,8 @@ class GitCommitCommand(sublime_plugin.WindowCommand):
         if file is None:
             return False
 
-        pwd = file.rsplit('/', 1)[0]
-        if pwd.endswith('.git'):
+        pwd = file.rsplit("/", 1)[0]
+        if pwd.endswith(".git"):
             pwd = pwd[0:-4]
 
         for repo in git_dirs:
@@ -112,17 +124,15 @@ class GitCommitCommand(sublime_plugin.WindowCommand):
             non_git_dirs.append(pwd)
             return False
 
-
     def is_git_dir(self, pwd: str) -> str:
         while pwd:
-            if os.path.exists(os.path.join(pwd, '.git')):
+            if os.path.exists(os.path.join(pwd, ".git")):
                 return pwd
             parent = os.path.realpath(os.path.join(pwd, os.path.pardir))
             if parent == pwd:
                 # /.. == /
-                return ''
+                return ""
             pwd = parent
-
 
 
 class GitQuickCommitCommand(GitTextCommand):
@@ -131,8 +141,7 @@ class GitQuickCommitCommand(GitTextCommand):
             # 'target' might also be False, in which case we just don't provide an add argument
             target = self.get_file_name()
         self.get_window().show_input_panel(
-            "Message", "",
-            functools.partial(self.on_input, target), None, None
+            "Message", "", functools.partial(self.on_input, target), None, None
         )
 
     def on_input(self, target, message):
@@ -141,11 +150,11 @@ class GitQuickCommitCommand(GitTextCommand):
             return
 
         if target:
-            command = ['git', 'add']
-            if target == '*':
-                command.append('--all')
+            command = ["git", "add"]
+            if target == "*":
+                command.append("--all")
             else:
-                command.extend(('--', target))
+                command.extend(("--", target))
             self.run_command(command, functools.partial(self.add_done, message))
         else:
             self.add_done(message, "")
@@ -154,7 +163,7 @@ class GitQuickCommitCommand(GitTextCommand):
         if result.strip():
             sublime.error_message("Error adding file:\n" + result)
             return
-        self.run_command(['git', 'commit', '-m', message])
+        self.run_command(["git", "commit", "-m", message])
 
 
 class GitCommitAmendCommand(GitCommitCommand):
@@ -163,7 +172,9 @@ class GitCommitAmendCommand(GitCommitCommand):
 
     def diff_done(self, result):
         self.after_show = result
-        self.run_command(['git', 'log', '-n', '1', '--format=format:%B'], self.amend_diff_done)
+        self.run_command(
+            ["git", "log", "-n", "1", "--format=format:%B"], self.amend_diff_done
+        )
 
     def amend_diff_done(self, result):
         self.lines = result.split("\n")
@@ -184,4 +195,4 @@ class GitCommitMessageListener(sublime_plugin.EventListener):
 class GitCommitSelectedHunk(GitAddSelectedHunkCommand):
     def cull_diff(self, result):
         super(GitCommitSelectedHunk, self).cull_diff(result)
-        self.get_window().run_command('git_commit')
+        self.get_window().run_command("git_commit")

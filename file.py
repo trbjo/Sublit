@@ -1,7 +1,8 @@
+import functools
 import os
 
 import sublime
-import functools
+
 from . import GitWindowCommand, git_root
 
 
@@ -14,8 +15,7 @@ class GitFileMove(GitWindowCommand):
             sublime.error_message(leaf + " is read-only")
 
         panel = self.get_window().show_input_panel(
-            "New path / name", filename,
-            self.on_input, None, None
+            "New path / name", filename, self.on_input, None, None
         )
 
         if branch:
@@ -36,8 +36,10 @@ class GitFileMove(GitWindowCommand):
         working_dir = git_root(self.get_working_dir())
         newpath = os.path.join(working_dir, newpath)
 
-        command = ['git', 'mv', '--', self.active_file_path(), newpath]
-        self.run_command(command, functools.partial(self.on_done, newpath), working_dir=working_dir)
+        command = ["git", "mv", "--", self.active_file_path(), newpath]
+        self.run_command(
+            command, functools.partial(self.on_done, newpath), working_dir=working_dir
+        )
 
     def on_done(self, newpath, result):
         if result.strip():

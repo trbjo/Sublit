@@ -3,6 +3,7 @@ import re
 from typing import List
 
 import sublime
+
 from . import GitWindowCommand, git_root
 
 
@@ -10,24 +11,23 @@ class GitStatusCommand(GitWindowCommand):
     force_open = False
 
     def run(self):
-        self.run_command(['git', 'status', '--porcelain'], self.status_done)
+        self.run_command(["git", "status", "--porcelain"], self.status_done)
 
     def status_done(self, result: str):
-        self.results: List[str] = list(filter(self.status_filter, result.rstrip().split('\n')))
+        self.results: List[str] = list(
+            filter(self.status_filter, result.rstrip().split("\n"))
+        )
         if len(self.results):
             self.show_status_list()
         else:
             sublime.status_message("Nothing to show")
 
     def show_status_list(self):
-        self.quick_panel(
-            self.results, self.panel_done,
-            sublime.MONOSPACE_FONT
-        )
+        self.quick_panel(self.results, self.panel_done, sublime.MONOSPACE_FONT)
 
     def status_filter(self, item):
         # for this class we don't actually care
-        if not re.match(r'^[ MADRCU?!]{1,2}\s+.*', item):
+        if not re.match(r"^[ MADRCU?!]{1,2}\s+.*", item):
             return False
         return len(item) > 0
 
@@ -47,23 +47,23 @@ class GitStatusCommand(GitWindowCommand):
 
         s = sublime.load_settings("Git.sublime-settings")
         root = git_root(self.get_working_dir())
-        if picked_status == '??' or s.get('status_opens_file') or self.force_open:
+        if picked_status == "??" or s.get("status_opens_file") or self.force_open:
             file_name = os.path.join(root, picked_file)
-            if(os.path.isfile(file_name)):
+            if os.path.isfile(file_name):
                 # Sublime Text 3 has a bug wherein calling open_file from within a panel
                 # callback causes the new view to not have focus. Make a deferred call via
                 # set_timeout to workaround this issue.
                 sublime.set_timeout(lambda: self.window.open_file(file_name), 0)
         else:
-            if s.get('diff_tool'):
+            if s.get("diff_tool"):
                 self.run_command(
-                    ['git', 'difftool', '--', picked_file.strip('"')],
-                    working_dir=root
+                    ["git", "difftool", "--", picked_file.strip('"')], working_dir=root
                 )
             else:
                 self.run_command(
-                    ['git', 'diff', '--no-color', '--', picked_file.strip('"')],
-                    self.diff_done, working_dir=root
+                    ["git", "diff", "--no-color", "--", picked_file.strip('"')],
+                    self.diff_done,
+                    working_dir=root,
                 )
 
     def diff_done(self, result):

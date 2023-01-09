@@ -3,6 +3,7 @@ import os
 
 import sublime
 import sublime_plugin
+
 from . import GitTextCommand
 
 
@@ -33,28 +34,28 @@ class GitUpdateIgnoreCommand(GitTextCommand):
         self.excludes = {}
 
         data = self.view.window().project_data()
-        for index, folder in enumerate(data['folders']):
+        for index, folder in enumerate(data["folders"]):
             self.count += 2
             self.excludes[index] = {
-                'files': set(),
-                'folders': set(),
+                "files": set(),
+                "folders": set(),
             }
 
-            path = self.path(folder['path'])
+            path = self.path(folder["path"])
             callback = functools.partial(self.ignored_files_found, folder_index=index)
             self.run_command(
-                ['git', 'status', '--ignored', '--porcelain'],
+                ["git", "status", "--ignored", "--porcelain"],
                 callback=callback,
                 working_dir=path,
                 error_suppresses_output=True,
-                show_status=False
+                show_status=False,
             )
             self.run_command(
-                ['git', 'submodule', 'foreach', 'git status --ignored --porcelain'],
+                ["git", "submodule", "foreach", "git status --ignored --porcelain"],
                 callback=callback,
                 working_dir=path,
                 error_suppresses_output=True,
-                show_status=False
+                show_status=False,
             )
 
     def ignored_files_found(self, result, folder_index):
@@ -67,27 +68,27 @@ class GitUpdateIgnoreCommand(GitTextCommand):
 
     def process_ignored_files(self, result, folder_index):
         data = self.view.window().project_data()
-        folder = data['folders'][folder_index]
+        folder = data["folders"][folder_index]
 
         if not folder:
             return
         if not result or result.isspace():
             return
 
-        root = self.path(folder['path'])
-        exclude_folders = self.excludes[folder_index]['folders']
-        exclude_files = self.excludes[folder_index]['files']
+        root = self.path(folder["path"])
+        exclude_folders = self.excludes[folder_index]["folders"]
+        exclude_files = self.excludes[folder_index]["files"]
 
-        subroot = ''
-        for line in result.strip().split('\n'):
-            if line.startswith('Entering'):
-                subroot = line.replace('Entering ', '').replace('\'', '')
-            if not line.startswith('!!'):
+        subroot = ""
+        for line in result.strip().split("\n"):
+            if line.startswith("Entering"):
+                subroot = line.replace("Entering ", "").replace("'", "")
+            if not line.startswith("!!"):
                 continue
-            path = os.path.join(subroot, line.replace('!! ', ''))
+            path = os.path.join(subroot, line.replace("!! ", ""))
 
             if os.path.isdir(os.path.join(root, path)):
-                exclude_folders.add(path.rstrip('\\/'))
+                exclude_folders.add(path.rstrip("\\/"))
             else:
                 exclude_files.add(path)
 
@@ -96,17 +97,25 @@ class GitUpdateIgnoreCommand(GitTextCommand):
     def all_ignored_files_found(self):
         data = self.view.window().project_data()
         changed = False
-        for index, folder in enumerate(data['folders']):
-            exclude_folders = self.excludes[index]['folders']
-            exclude_files = self.excludes[index]['files']
+        for index, folder in enumerate(data["folders"]):
+            exclude_folders = self.excludes[index]["folders"]
+            exclude_files = self.excludes[index]["files"]
 
-            old_exclude_folders = set(folder.get('folder_exclude_patterns', []))
-            old_exclude_files = set(folder.get('file_exclude_patterns', []))
+            old_exclude_folders = set(folder.get("folder_exclude_patterns", []))
+            old_exclude_files = set(folder.get("file_exclude_patterns", []))
 
-            if exclude_folders != old_exclude_folders or exclude_files != old_exclude_files:
-                print('Git: updating project exclusions', folder['path'], exclude_folders, exclude_files)
-                folder['folder_exclude_patterns'] = list(exclude_folders)
-                folder['file_exclude_patterns'] = list(exclude_files)
+            if (
+                exclude_folders != old_exclude_folders
+                or exclude_files != old_exclude_files
+            ):
+                print(
+                    "Git: updating project exclusions",
+                    folder["path"],
+                    exclude_folders,
+                    exclude_files,
+                )
+                folder["folder_exclude_patterns"] = list(exclude_folders)
+                folder["file_exclude_patterns"] = list(exclude_files)
                 changed = True
         if changed:
             self.view.window().set_project_data(data)
