@@ -57,9 +57,24 @@ class BlameWatcher(BaseBlame, sublime_plugin.ViewEventListener):
     def rerun(self, **kwargs):
         self.run(None)
 
-    def on_modified_async(self):
+    def on_modified(self):
+        if not self.view.settings().get("shas"):
+            return
+
         self.view.settings().erase("shas")
         view_erase_phantoms(self.view.id(), "blame_all")
+        self.view.settings().set(
+            VIEW_SETTINGS_KEY_RULERS,
+            self.view.settings().get(VIEW_SETTINGS_KEY_RULERS_PREV),
+        )
+        self.view.settings().set(
+            VIEW_SETTINGS_KEY_INDENT_GUIDE,
+            self.view.settings().get(VIEW_SETTINGS_KEY_INDENT_GUIDE_PREV),
+        )
+        self.view.settings().set(
+            VIEW_SETTINGS_KEY_WRAP,
+            self.view.settings().get(VIEW_SETTINGS_KEY_WRAP_PREV),
+        )
 
     def on_hover(self, point: int, hover_zone: int) -> None:
         if not self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED):
@@ -271,7 +286,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         # Bring the phantoms into view without the user needing to manually scroll left.
         self.horizontal_scroll_to_limit(left=True)
 
-        if self.regs_ready_formatting:
+        if self.regs_ready_formatting and self.view.settings().get("shas", False):
             self.set_phantoms_from_regions()
             return
 
@@ -395,7 +410,6 @@ class BlameEraseAll(sublime_plugin.TextCommand):
     # Overrides begin ------------------------------------------------------------------
 
     def run(self, edit: Edit) -> None:
-        sublime.status_message("The git blame result is cleared.")
         self.view.settings().erase(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED)
         self.view.run_command("blame_restore_rulers")
 
