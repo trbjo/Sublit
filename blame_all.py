@@ -269,7 +269,7 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         if file_name is None:
             return
 
-        self.view.erase_phantoms(self.key_name)
+        view_erase_phantoms(self.view.id(), self.key_name)
 
         # If they are currently shown, toggle them off and return.
         if self.view.settings().get(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, False):
