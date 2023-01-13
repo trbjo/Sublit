@@ -130,12 +130,15 @@ class BlameInlineListener(BaseBlame, sublime_plugin.ViewEventListener):
         if not blame or blame["sha"] == "00000000":  # All zeros means uncommited change
             return
 
-        try:
-            summary = self.get_commit_message_subject(
-                blame["sha"], self.view.file_name()
-            )
-        except Exception:  # Don't want to spam Console on failures.
-            return
+        height, width = self.view.viewport_extent()
+        summary = ""
+        if height > int(1400):
+            try:
+                summary = self.get_commit_message_subject(
+                    blame["sha"], self.view.file_name()
+                )
+            except Exception:  # Don't want to spam Console on failures.
+                return
 
         phantom = sublime.Phantom(
             sublime.Region(phantom_pos),

@@ -281,12 +281,12 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
             self.horizontal_scroll_to_limit(left=True)
             return
 
-        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
-        self.settings_for_blame()
-        # Bring the phantoms into view without the user needing to manually scroll left.
-        self.horizontal_scroll_to_limit(left=True)
-
         if self.regs_ready_formatting and self.view.settings().get("shas", False):
+            self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
+            self.settings_for_blame()
+            # Bring the phantoms into view without the user needing to manually scroll left.
+            self.horizontal_scroll_to_limit(left=True)
+
             self.set_phantoms_from_regions()
             return
 
@@ -295,6 +295,11 @@ class BlameShowAll(BaseBlame, sublime_plugin.TextCommand):
         except Exception as e:
             self.communicate_error(e)
             return
+
+        self.view.settings().set(VIEW_SETTINGS_KEY_PHANTOM_ALL_DISPLAYED, True)
+        self.settings_for_blame()
+        # Bring the phantoms into view without the user needing to manually scroll left.
+        self.horizontal_scroll_to_limit(left=True)
 
         blames = [self.parse_line(line) for line in blame_output.splitlines()]
         blames = [b for b in blames if b]
