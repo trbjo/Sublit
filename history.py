@@ -236,6 +236,8 @@ class GitGotoCommit(GitTextCommand):
         )
 
     def is_enabled(self):
+        if self.view.element() is not None:
+            return False
         selection = self.view.sel()[0]
         return self.view.match_selector(
             selection.a, "text.git-blame"
