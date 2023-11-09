@@ -55,7 +55,7 @@ class GitLog(object):
         self.scratch(
             result,
             title="Git Commit Details",
-            syntax=plugin_file("syntax/Git Commit View.tmLanguage"),
+            syntax="Packages/Git Formats/Git Log.sublime-syntax",
         )
 
 
@@ -130,7 +130,7 @@ class GitShowCommitCommand(GitWindowCommand):
         self.scratch(
             result,
             title="Git Commit: %s" % commit,
-            syntax=plugin_file("syntax/Git Commit View.tmLanguage"),
+            syntax="Packages/Git Formats/Git Log.sublime-syntax",
         )
 
 
@@ -232,7 +232,7 @@ class GitGotoCommit(GitTextCommand):
         self.scratch(
             result,
             title="Git Commit View",
-            syntax=plugin_file("syntax/Git Commit View.tmLanguage"),
+            syntax="Packages/Git Formats/Git Log.sublime-syntax",
         )
 
     def is_enabled(self):
