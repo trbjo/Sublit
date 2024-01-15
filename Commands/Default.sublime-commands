@@ -79,6 +79,15 @@
       "command": "git_open_modified_files"
   }
   ,{
+      "caption": "Git: Open Modified Files Only",
+      "command": "chain", "args": {
+          "commands": [
+            {"command": "close_all"},
+            {"command": "git_open_modified_files"},
+          ]},
+
+  }
+  ,{
       "caption": "Git: New Branch",
       "command": "git_new_branch"
   }
