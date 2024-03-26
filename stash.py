@@ -43,7 +43,7 @@ class GitStashListCommand(GitStashCommand):
     command_to_run_after_list = ["show", "-p"]
 
     def handle_command(self, result, stash, **kw):
-        self.scratch(result, title=stash, syntax="Packages/Diff/Diff.tmLanguage")
+        self.scratch(result, title=stash, syntax="Packages/Diff/Diff.sublime-syntax")
 
 
 class GitStashApplyCommand(GitStashCommand):

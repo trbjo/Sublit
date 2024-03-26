@@ -384,7 +384,7 @@ class GitCommand(object):
         output_file,
         output,
         clear=False,
-        syntax="Packages/Diff/Diff.tmLanguage",
+        syntax="Packages/Diff/Diff.sublime-syntax",
         **kwargs,
     ):
         output_file.set_syntax_file(syntax)
